@@ -118,7 +118,7 @@ fun MessageCard(
                 if (isExpanded) {
                     Card(
                         modifier = Modifier.wrapContentSize(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                     ) {
                         content()
                     }
@@ -127,7 +127,7 @@ fun MessageCard(
                         onClick = {
                             isExpanded = true
                         },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
                         content()
                     }
                 }
