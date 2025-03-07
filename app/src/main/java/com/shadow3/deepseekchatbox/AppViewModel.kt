@@ -183,8 +183,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     data: String
                 ) {
                     try {
-                        Log.d("AppViewModel", "Data: $data")
-
                         if (data.trim() == "[DONE]") {
                             eventSource.cancel()
                             _isWaiting.value = false

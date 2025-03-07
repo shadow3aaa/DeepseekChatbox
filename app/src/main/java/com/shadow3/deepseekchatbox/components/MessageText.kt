@@ -1,14 +1,16 @@
 package com.shadow3.deepseekchatbox.components
 
 import android.annotation.SuppressLint
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.multiplatform.webview.web.LoadingState
-import com.multiplatform.webview.web.WebView
-import com.multiplatform.webview.web.WebViewNavigator
-import com.multiplatform.webview.web.rememberWebViewNavigator
-import com.multiplatform.webview.web.rememberWebViewStateWithHTMLFile
+import androidx.compose.ui.viewinterop.AndroidView
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -17,35 +19,43 @@ fun MessageText(
     reasoningContent: String?,
     modifier: Modifier = Modifier
 ) {
-    val state = rememberWebViewStateWithHTMLFile("markdown.html")
-    val navigator = rememberWebViewNavigator()
+    var webView by remember { mutableStateOf<WebView?>(null) }
+    var isPageLoaded by remember { mutableStateOf(false) }
 
-    WebView(
-        modifier = modifier,
-        state = state,
-        navigator = navigator,
-        captureBackPresses = false
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                settings.javaScriptEnabled = true
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                webViewClient = object : WebViewClient() {
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        isPageLoaded = true
+                    }
+                }
+                loadUrl("file:///android_asset/markdown.html")
+                webView = this
+            }
+        },
+        modifier = modifier
     )
 
-    if (state.loadingState == LoadingState.Finished) {
-        renderMarkdownContent(content ?: "", reasoningContent ?: "", navigator)
-    }
-
-    LaunchedEffect(content, reasoningContent) {
-        if (state.loadingState == LoadingState.Finished) {
-            renderMarkdownContent(content ?: "", reasoningContent ?: "", navigator)
+    LaunchedEffect(content, reasoningContent, isPageLoaded) {
+        if (isPageLoaded) {
+            renderContent(webView, content ?: "", reasoningContent ?: "")
         }
     }
 }
 
-private fun renderMarkdownContent(
+private fun renderContent(
+    webView: WebView?,
     content: String,
-    reasoningContent: String,
-    navigator: WebViewNavigator
+    reasoningContent: String
 ) {
     val escapedReasoningMarkdown = reasoningContent.replace("'", "\\'").replace("\n", "\\n")
-    navigator.evaluateJavaScript("renderReasoningMarkdown('$escapedReasoningMarkdown');")
+    webView?.evaluateJavascript("renderReasoningMarkdown('$escapedReasoningMarkdown');") {
+
+    }
 
     val escapedMarkdown = content.replace("'", "\\'").replace("\n", "\\n")
-    navigator.evaluateJavaScript("renderMarkdown('$escapedMarkdown');")
+    webView?.evaluateJavascript("renderMarkdown('$escapedMarkdown');") {}
 }

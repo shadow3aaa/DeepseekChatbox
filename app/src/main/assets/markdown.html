@@ -9,17 +9,54 @@
     <script src="file:///android_asset/highlight.js"></script>
     <script type="text/javascript" id="MathJax-script" defer src="file:///android_asset/mathjax-tex-svg.js"></script>
     <script>
-        // 配置 MathJax
         MathJax = {
             tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']]
+                inlineMath: [["$", "$"], ["\\(", "\\)"]]
             },
             svg: {
-                fontCache: 'global'
+                fontCache: "global"
             }
         };
 
-        // 渲染主内容区域的 Markdown
+        const COLLAPSED_HEIGHT = 72;
+        var isCollapsed = true;
+        var hasReasoningContent = false;
+
+        function updateReasoning() {
+            const element = document.getElementById("reasoningContent");
+            const toggleBtn = document.getElementById("toggleReasoningBtn");
+
+            if (hasReasoningContent) {
+                element.style.display = "block";
+                toggleBtn.style.display = "inline";
+            } else {
+                element.style.display = "none";
+                toggleBtn.style.display = "none";
+                return;
+            }
+
+            if (isCollapsed) {
+                toggleBtn.textContent = "Show Reasoning";
+            } else {
+                toggleBtn.textContent = "Hide Reasoning";
+            }
+
+            if (isCollapsed && element.clientHeight >= COLLAPSED_HEIGHT) {
+                requestAnimationFrame(() => {
+                    element.style.height = COLLAPSED_HEIGHT + "px";
+                });
+            } else {
+                requestAnimationFrame(() => {
+                    element.style.height = element.scrollHeight + "px";
+                });
+            }
+        }
+
+        function toggleReasoning() {
+            isCollapsed = !isCollapsed;
+            updateReasoning();
+        }
+
         function renderMarkdown(content) {
             var html = marked.parse(content);
             var element = document.getElementById("content");
@@ -28,67 +65,39 @@
                 return "Failed";
             }
             element.innerHTML = html;
-            MathJax.typesetPromise([element]).then(function() {
-                element.querySelectorAll('pre code').forEach((block) => {
+            MathJax.typesetPromise([element]).then(function () {
+                element.querySelectorAll("pre code").forEach((block) => {
                     hljs.highlightBlock(block);
                 });
-            }).catch(function(err) {
+            }).catch(function (err) {
                 console.error("MathJax typesetting failed: " + err.message);
             });
         }
 
-        // 渲染 reasoningContent 区域的 Markdown
         function renderReasoningMarkdown(reasoningContent) {
+            hasReasoningContent = reasoningContent != "";
             var html = marked.parse(reasoningContent);
             var element = document.getElementById("reasoningContent");
-            var toggleBtn = document.getElementById("toggleReasoningBtn");
-
             if (!element) {
                 console.error("Element with id 'reasoningContent' not found.");
                 return "Failed";
             }
-
             element.innerHTML = html;
-
-            // 检查行数
-            var lineCount = element.innerText.split('\n').length;
-
-            if (lineCount > 3) {
-                // 超过三行，显示元素和按钮
-                element.style.display = 'block';
-                toggleBtn.style.display = 'inline';
-                element.classList.add("collapsed");
-            } else if (lineCount > 0) {
-                // 不超过三行，仅显示元素，不显示按钮
-                element.style.display = 'block';
-                toggleBtn.style.display = 'none';
-                element.classList.remove("collapsed");
-            } else {
-                // 没有内容，隐藏元素和按钮
-                element.style.display = 'none';
-                toggleBtn.style.display = 'none';
-            }
-
-            MathJax.typesetPromise([element]).then(function() {
-                element.querySelectorAll('pre code').forEach((block) => {
+            MathJax.typesetPromise([element]).then(function () {
+                element.querySelectorAll("pre code").forEach((block) => {
                     hljs.highlightBlock(block);
                 });
-            }).catch(function(err) {
+            }).catch(function (err) {
                 console.error("MathJax typesetting failed: " + err.message);
             });
+            updateReasoning();
         }
 
-        // 切换 reasoningContent 的展开/折叠状态
-        function toggleReasoning() {
-            var element = document.getElementById("reasoningContent");
-            var toggleBtn = document.getElementById("toggleReasoningBtn");
-            if (element.classList.contains("collapsed")) {
-                element.classList.remove("collapsed");
-                toggleBtn.textContent = "Hide Reasoning";
-            } else {
-                element.classList.add("collapsed");
-                toggleBtn.textContent = "Show Reasoning";
-            }
+        function getActualLineCount(element) {
+            const style = window.getComputedStyle(element);
+            const lineHeight = parseFloat(style.lineHeight);
+            const height = parseFloat(style.height);
+            return Math.round(height / lineHeight);
         }
     </script>
     <style>
@@ -104,36 +113,25 @@
             font-size: 1em;
             margin: 10px 0;
             padding: 0;
-            display: none; /* 初始隐藏按钮 */
+            display: none;
         }
 
-        /* reasoningContent 使用 blockquote 风格，并设置动画 */
         #reasoningContent {
             border-left: 4px solid #ccc;
             margin: 1em 0;
             padding: 0 1em;
             color: grey;
-            background: transparent;
             overflow: hidden;
-            line-height: 1.2em;
-            max-height: 1000px; /* 展开时的最大高度 */
-            transition: max-height 0.5s ease;
-            display: none; /* 初始隐藏元素 */
-        }
-
-        /* 折叠状态下只显示约 3 行 */
-        #reasoningContent.collapsed {
-            max-height: 3.6em; /* 3行 * 1.2em = 3.6em */
+            display: block;
+            height: auto;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>
 
 <body style="margin:0; padding:0;">
-<!-- reasoningContent 折叠按钮和内容（位于主内容上方） -->
 <button id="toggleReasoningBtn" class="toggle-button" onclick="toggleReasoning()">Show Reasoning</button>
 <blockquote id="reasoningContent"></blockquote>
-
-<!-- 主内容区域 -->
 <div id="content"></div>
 </body>
 

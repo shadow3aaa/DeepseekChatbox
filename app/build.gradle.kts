@@ -41,7 +41,6 @@ android {
 
 dependencies {
 
-    implementation(libs.compose.webview)
     implementation(libs.okhttp)
     implementation(libs.okhttp.sse)
     implementation(libs.androidx.core.ktx)
