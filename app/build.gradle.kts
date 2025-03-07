@@ -41,7 +41,7 @@ android {
 
 dependencies {
 
-    implementation(libs.compose.markdown)
+    implementation(libs.compose.webview)
     implementation(libs.okhttp)
     implementation(libs.okhttp.sse)
     implementation(libs.androidx.core.ktx)

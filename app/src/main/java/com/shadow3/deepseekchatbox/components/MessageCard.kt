@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -15,7 +16,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,15 +25,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import coil.ImageLoader
 import com.shadow3.deepseekchatbox.Message
 import com.shadow3.deepseekchatbox.R
-import dev.jeziellago.compose.markdowntext.AutoSizeConfig
-import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 fun MessageCard(
@@ -44,7 +40,6 @@ fun MessageCard(
     regenerateResponse: () -> Unit,
     isWaiting: Boolean
 ) {
-    val context = LocalContext.current
     val textStyle = MaterialTheme.typography.bodyMedium
     val density = LocalDensity.current
     val fontSize = textStyle.fontSize
@@ -68,24 +63,21 @@ fun MessageCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            var isExpanded by remember { mutableStateOf(false) }
-            val maxLines = if (isExpanded) Int.MAX_VALUE else 3
+            if (msg.reasoningContent?.isNotBlank() == true) {
+                var isExpanded by remember { mutableStateOf(false) }
 
-            msg.reasoningContent?.let {
                 val content = @Composable {
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    MarkdownText(
-                        markdown = it,
-                        isTextSelectable = isExpanded,
-                        imageLoader = ImageLoader(context),
-                        autoSizeConfig = AutoSizeConfig(
-                            autoSizeMinTextSize = fontSize.value.toInt(),
-                            autoSizeMaxTextSize = fontSize.value.toInt() * 2,
-                            autoSizeStepGranularity = 1
-                        ),
-                        maxLines = maxLines,
-                        style = LocalTextStyle.current.copy(color = Color.Gray)
+                    MarkDown(
+                        modifier = Modifier.fillMaxWidth().let {
+                            if (!isExpanded) {
+                                it.heightIn(min = 0.dp, max = 100.dp)
+                            } else {
+                                it
+                            }
+                        },
+                        markdown = msg.reasoningContent!!,
                     )
 
                     AnimatedVisibility(!isExpanded) {
@@ -135,21 +127,16 @@ fun MessageCard(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            msg.content?.let {
-                MarkdownText(
-                    markdown = it,
-                    isTextSelectable = true,
-                    imageLoader = ImageLoader(context),
-                    autoSizeConfig = AutoSizeConfig(
-                        autoSizeMinTextSize = fontSize.value.toInt(),
-                        autoSizeMaxTextSize = fontSize.value.toInt() * 2,
-                        autoSizeStepGranularity = 1
-                    )
+            if (msg.content?.isNotBlank() == true) {
+                MarkDown(
+                    modifier = Modifier.fillMaxWidth(),
+                    markdown = msg.content!!,
                 )
             }
-            msg.error?.let {
+
+            if (msg.error?.isNotBlank() == true) {
                 Text(
-                    text = it,
+                    text = msg.error!!,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 4.dp)
