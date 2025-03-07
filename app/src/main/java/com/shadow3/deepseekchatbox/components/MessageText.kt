@@ -31,7 +31,7 @@ fun MessageText(
         renderMarkdownContent(content ?: "", reasoningContent ?: "", navigator)
     }
 
-    LaunchedEffect(content) {
+    LaunchedEffect(content, reasoningContent) {
         if (state.loadingState == LoadingState.Finished) {
             renderMarkdownContent(content ?: "", reasoningContent ?: "", navigator)
         }
