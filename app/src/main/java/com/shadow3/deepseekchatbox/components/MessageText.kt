@@ -1,7 +1,6 @@
 package com.shadow3.deepseekchatbox.components
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -13,8 +12,9 @@ import com.multiplatform.webview.web.rememberWebViewStateWithHTMLFile
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun MarkDown(
-    markdown: String,
+fun MessageText(
+    content: String?,
+    reasoningContent: String?,
     modifier: Modifier = Modifier
 ) {
     val state = rememberWebViewStateWithHTMLFile("markdown.html")
@@ -28,23 +28,24 @@ fun MarkDown(
     )
 
     if (state.loadingState == LoadingState.Finished) {
-        renderMarkdownContent(markdown, navigator)
+        renderMarkdownContent(content ?: "", reasoningContent ?: "", navigator)
     }
 
-    LaunchedEffect(markdown) {
+    LaunchedEffect(content) {
         if (state.loadingState == LoadingState.Finished) {
-            renderMarkdownContent(markdown, navigator)
+            renderMarkdownContent(content ?: "", reasoningContent ?: "", navigator)
         }
     }
 }
 
-private fun renderMarkdownContent(markdown: String, navigator: WebViewNavigator) {
-    val escapedMarkdown = markdown.replace("'", "\\'").replace("\n", "\\n")
-    val jsCode = "renderMarkdown('$escapedMarkdown');"
-    navigator.evaluateJavaScript(jsCode) {
-        if (it != "null") {
-            Log.e("MarkDown", it)
-            renderMarkdownContent(markdown, navigator)
-        }
-    }
+private fun renderMarkdownContent(
+    content: String,
+    reasoningContent: String,
+    navigator: WebViewNavigator
+) {
+    val escapedReasoningMarkdown = reasoningContent.replace("'", "\\'").replace("\n", "\\n")
+    navigator.evaluateJavaScript("renderReasoningMarkdown('$escapedReasoningMarkdown');")
+
+    val escapedMarkdown = content.replace("'", "\\'").replace("\n", "\\n")
+    navigator.evaluateJavaScript("renderMarkdown('$escapedMarkdown');")
 }
