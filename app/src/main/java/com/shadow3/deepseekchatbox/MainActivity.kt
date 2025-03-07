@@ -2,7 +2,6 @@ package com.shadow3.deepseekchatbox
 
 import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,7 +19,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -177,14 +175,6 @@ fun App(viewModel: AppViewModel = viewModel()) {
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            Toast.makeText(context, "Model: $currentModel", Toast.LENGTH_SHORT)
-                                .show()
-                        }) {
-                            Icon(Icons.Default.Info, contentDescription = "Info")
                         }
                     }
                 )
