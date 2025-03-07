@@ -233,6 +233,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     t: Throwable?,
                     response: Response?
                 ) {
+                    if (!_isWaiting.value) {
+                        return
+                    }
+
                     eventSource.cancel()
                     val errorMsg = (response?.body?.string() ?: "") + (t?.message ?: "")
                     _chatHistory.value.last().second.error = "Error: $errorMsg"
