@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Markdown Rendering</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+    <script src="file:///android_asset/marked.js"></script>
+    <script src="file:///android_asset/highlight.js"></script>
+    <script type="text/javascript" id="MathJax-script" defer src="file:///android_asset/mathjax-tex-svg.js">
+    </script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+
+        function renderMarkdown(content) {
+            var html = marked.parse(content);
+            if (document.getElementById("content").innerHTML == null) {
+                return "Failed"
+            } else {
+                document.getElementById("content").innerHTML = html;
+            }
+            MathJax.typesetPromise();
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        }
+    </script>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body style='margin:0;padding:0;'>
+<div id="content"></div>
+</body>
+
+</html>
