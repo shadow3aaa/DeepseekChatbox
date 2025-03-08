@@ -73,6 +73,7 @@ fun MessageCard(
                     if (role == "assistant") {
                         MessageCardIconButton(
                             modifier = Modifier.size(fontSizeDp),
+                            enabled = !isWaiting,
                             onClick = { regenerateResponse() },
                         ) {
                             Icon(

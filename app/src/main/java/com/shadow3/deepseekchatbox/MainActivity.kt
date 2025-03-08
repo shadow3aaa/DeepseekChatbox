@@ -2,6 +2,7 @@ package com.shadow3.deepseekchatbox
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -206,15 +207,17 @@ fun App(viewModel: AppViewModel = viewModel()) {
             }
         ) { paddingValues ->
             LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                itemsIndexed(items = chatHistory) { index, (role, msg) ->
-                    MessageCard(
-                        role = role,
-                        msg = msg,
-                        index = index,
-                        chatHistoryLength = chatHistory.size,
-                        regenerateResponse = viewModel::regenerateResponse,
-                        isWaiting = isWaiting
-                    )
+                itemsIndexed(items = chatHistory.chunked(10)) { chunkIndex, chunk ->
+                    chunk.forEachIndexed { index, (role, msg) ->
+                        MessageCard(
+                            role = role,
+                            msg = msg,
+                            index = chunkIndex * 10 + index,
+                            chatHistoryLength = chatHistory.size,
+                            regenerateResponse = viewModel::regenerateResponse,
+                            isWaiting = isWaiting
+                        )
+                    }
                 }
 
                 item(errorMsg) {
