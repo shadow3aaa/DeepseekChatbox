@@ -10,19 +10,16 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -58,9 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -104,7 +99,6 @@ fun App(viewModel: AppViewModel = viewModel()) {
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
     val drawerWidth = (screenWidthDp * 0.8f).coerceAtMost(320.dp)
-    val density = LocalDensity.current
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -198,8 +192,6 @@ fun App(viewModel: AppViewModel = viewModel()) {
             },
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
         ) { paddingValues ->
-            var surfaceHeightDp by remember { mutableStateOf(0) }
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -253,9 +245,6 @@ fun App(viewModel: AppViewModel = viewModel()) {
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .onGloballyPositioned { coordinates ->
-                            surfaceHeightDp = coordinates.size.height
-                        }
                         .consumeWindowInsets(paddingValues)
                         .imePadding(),
                     shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
