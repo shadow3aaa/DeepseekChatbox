@@ -2,22 +2,30 @@ package com.shadow3.deepseekchatbox
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Menu
@@ -34,7 +42,10 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -44,10 +55,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -82,7 +95,6 @@ class MainActivity : ComponentActivity() {
 fun App(viewModel: AppViewModel = viewModel()) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val apiKey by viewModel.apiKey.collectAsState()
     val currentModel by viewModel.currentModel.collectAsState()
     val chatHistory by viewModel.chatHistory.collectAsState()
@@ -92,7 +104,7 @@ fun App(viewModel: AppViewModel = viewModel()) {
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
     val drawerWidth = (screenWidthDp * 0.8f).coerceAtMost(320.dp)
-
+    val density = LocalDensity.current
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -144,6 +156,7 @@ fun App(viewModel: AppViewModel = viewModel()) {
         Scaffold(
             topBar = {
                 TopAppBar(
+                    modifier = Modifier.statusBarsPadding(),
                     title = {
                         var expanded by remember { mutableStateOf(false) }
                         Card(
@@ -156,7 +169,10 @@ fun App(viewModel: AppViewModel = viewModel()) {
                                 viewModel.updateModelList()
                                 expanded = !expanded
                             }) {
-                            Text(modifier = Modifier.padding(4.dp), text = currentModel ?: "Select Model")
+                            Text(
+                                modifier = Modifier.padding(4.dp),
+                                text = currentModel ?: "Select Model"
+                            )
                         }
 
                         DropdownMenu(
@@ -180,47 +196,36 @@ fun App(viewModel: AppViewModel = viewModel()) {
                     }
                 )
             },
-            bottomBar = {
-                var inputText by remember { mutableStateOf("") }
-                Row(modifier = Modifier
-                    .padding(8.dp)
-                    .wrapContentHeight()) {
-                    OutlinedTextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Enter message...") },
-                        shape = RoundedCornerShape(50.dp)
-                    )
-
-                    IconButton(onClick = {
-                        viewModel.updateUserPromptInput(inputText)
-                        viewModel.sendRequest()
-                        inputText = ""
-                    }, enabled = !isWaiting and inputText.isNotBlank() and (currentModel != null)) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send"
-                        )
-                    }
-                }
-            }
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
         ) { paddingValues ->
-            LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                itemsIndexed(items = chatHistory.chunked(10)) { chunkIndex, chunk ->
-                    chunk.forEachIndexed { index, (role, msg) ->
+            var surfaceHeightDp by remember { mutableStateOf(0) }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .consumeWindowInsets(paddingValues)
+            ) {
+                val scrollState = rememberScrollState()
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .verticalScroll(state = scrollState)
+                        .consumeWindowInsets(paddingValues)
+                        .imePadding()
+                ) {
+                    chatHistory.forEachIndexed { index, (role, msg) ->
                         MessageCard(
                             role = role,
                             msg = msg,
-                            index = chunkIndex * 10 + index,
+                            index = index,
                             chatHistoryLength = chatHistory.size,
                             regenerateResponse = viewModel::regenerateResponse,
                             isWaiting = isWaiting
                         )
-                    }
-                }
 
-                item(errorMsg) {
+                    }
+
                     AnimatedVisibility(errorMsg != null) {
                         Card(
                             modifier = Modifier
@@ -241,6 +246,54 @@ fun App(viewModel: AppViewModel = viewModel()) {
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
+                        }
+                    }
+                }
+
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .onGloballyPositioned { coordinates ->
+                            surfaceHeightDp = coordinates.size.height
+                        }
+                        .consumeWindowInsets(paddingValues)
+                        .imePadding(),
+                    shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    var inputText by remember { mutableStateOf("") }
+
+                    Row(modifier = Modifier.padding(8.dp)) {
+                        TextField(
+                            value = inputText,
+                            onValueChange = { inputText = it },
+                            modifier = Modifier.weight(1.0f),
+                            placeholder = { Text("Enter message...") },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                errorContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                errorIndicatorColor = Color.Transparent
+                            )
+                        )
+
+                        IconButton(
+                            modifier = Modifier.align(Alignment.Bottom),
+                            onClick = {
+                                viewModel.updateUserPromptInput(inputText)
+                                viewModel.sendRequest()
+                                inputText = ""
+                            },
+                            enabled = !isWaiting and inputText.isNotBlank() and (currentModel != null)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "Send"
+                            )
                         }
                     }
                 }

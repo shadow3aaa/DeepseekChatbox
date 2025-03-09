@@ -29,7 +29,6 @@ fun MessageText(
         factory = { context ->
             WebView(context).apply {
                 settings.javaScriptEnabled = true
-                settings.cacheMode = WebSettings.LOAD_NO_CACHE
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
                 webViewClient = object : WebViewClient() {
